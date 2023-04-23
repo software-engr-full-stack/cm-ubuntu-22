@@ -1,0 +1,13 @@
+---
+- hosts: default
+
+  remote_user: 'remote'
+
+  tasks:
+    - name: 'Test...'
+      become: yes
+      ansible.builtin.command: whoami
+      register: result
+
+    - ansible.builtin.debug:
+        var: result.stdout
