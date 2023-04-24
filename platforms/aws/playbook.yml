@@ -29,7 +29,7 @@
         nodejs_target_dir: '/usr/local/nodejs'
 
         # Ruby
-        ruby_version: '3.2.2'
+        ruby_version: '3.2.1'
 
     - import_tasks: './tasks/35-web-server/web-server.yml'
 

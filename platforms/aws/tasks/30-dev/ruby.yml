@@ -2,8 +2,9 @@
 - name: '{{ title }}, Ruby: set facts'
   set_fact:
     subtitle: '{{ title }}, Ruby'
-    home_dir: '/home/{{ deploy_user }}'         # TODO: use a better way of finding out the home dir
-    rbenv_dir: '/home/{{ deploy_user }}/.rbenv' # TODO: use a better way of finding out the home dir
+    home_dir:  '/home/{{ deploy_user }}'         # TODO: use a better way of finding out the home dir
+    rbenv_dir: '/home/{{ deploy_user }}/.rbenv'
+    bin_dir:   '/home/{{ deploy_user }}/.rbenv/versions/{{ ruby_version }}/bin'
 
 - name: '{{ subtitle }}: install rbenv'
   become: yes
@@ -38,7 +39,7 @@
       - '{{ rbenv_dir }}/bin/rbenv'
       - install
       - '{{ ruby_version }}'
-    creates: '{{ rbenv_dir }}/versions/{{ ruby_version }}/bin/ruby'
+    creates: '{{ bin_dir }}/ruby'
 
 - name: '{{ subtitle }}: install set global version'
   become: yes
@@ -48,6 +49,15 @@
       - '{{ rbenv_dir }}/bin/rbenv'
       - global
       - '{{ ruby_version }}'
+
+- name: '{{ subtitle }}: install Rails'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.command:
+    argv:
+      - '{{ bin_dir }}/gem'
+      - install
+      - rails
 
 - name: '{{ subtitle }}: unset facts'
   set_fact:
