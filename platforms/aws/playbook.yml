@@ -4,10 +4,40 @@
   remote_user: 'remote'
 
   tasks:
-    - name: 'Test...'
-      become: yes
-      ansible.builtin.command: whoami
-      register: result
+    - import_tasks: './tasks/10-backups/backups.yml'
 
-    - ansible.builtin.debug:
-        var: result.stdout
+    - import_tasks: './tasks/15-security/ssh.yml'
+    - import_tasks: './tasks/15-security/firewall.yml'
+
+    - import_tasks: './tasks/20-packages/packages.yml'
+
+    - import_tasks: './tasks/25-users/users.yml'
+      vars:
+        deploy_user: 'deploy'
+
+    - import_tasks: './tasks/30-dev/dev.yml'
+      vars:
+        deploy_user: 'deploy'
+        bin_path: '/usr/local/go/bin:/usr/local/nodejs/bin:{{ ansible_env.PATH }}'
+
+        # Go
+        go_src_basename: 'go1.20.3.linux-amd64.tar.gz'
+        go_target_dir:   '/usr/local/go'
+
+        # NodeJS
+        nodejs_version:   'v18.16.0'
+        nodejs_target_dir: '/usr/local/nodejs'
+
+        # Ruby
+        ruby_version: '3.2.2'
+
+    - import_tasks: './tasks/35-web-server/web-server.yml'
+
+    - import_tasks: './tasks/40-end/end.yml'
+
+  handlers:
+  - name: restart-ssh
+    become: yes
+    service:
+      name: ssh
+      state: restarted

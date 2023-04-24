@@ -1,0 +1,40 @@
+---
+- name: 'End, reboot: set facts'
+  set_fact:
+    title: 'End, reboot'
+    first_run_indicator: '/root/first-run'
+
+- name: '{{ title }}: do we reboot or not'
+  become: yes
+  stat:
+    path: '{{ first_run_indicator }}'
+  register: stat_result
+
+- name: '{{ title }}: reboot'
+  become: yes
+  reboot:
+    pre_reboot_delay: 5
+    test_command: echo '... successfully rebooted'
+  register: result_reboot
+  when: not stat_result.stat.exists
+
+- debug:
+    msg:
+      - '... reboot result'
+      - '{{ result_reboot }}'
+  when: not stat_result.stat.exists
+
+- name: '{{ title }}: create first run indicator file'
+  become: yes
+  ansible.builtin.copy:
+    content: '{{ ansible_date_time }}'
+    dest: '{{ first_run_indicator }}'
+
+- name: '{{ title }}: unset facts'
+  set_fact:
+    first_run_indicator:
+
+- name: '{{ title }}: unset facts'
+  set_fact:
+    title:
+    first_run_indicator:

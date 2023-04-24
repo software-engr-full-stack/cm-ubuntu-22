@@ -1,0 +1,88 @@
+---
+- name: 'Firewall: set facts'
+  set_fact:
+    title: 'Firewall'
+    firewall_comment: '... created by "Firewall"'
+
+- name: '{{ title }}: install'
+  become: yes
+  apt:
+    name: ufw
+    state: latest
+    # Why? See fail2ban. It might install crap like Python 2.
+    install_recommends: no
+
+- name: '{{ title }}: allow SSH'
+  become: yes
+  ufw:
+    rule: 'allow'
+    # ... enter source IP for stricter config
+    # from_ip: '???'
+
+    # ... if a different SSH port is used
+    # port: ???
+    port: '{{ 22 | string }}'
+
+    proto: 'tcp'
+    comment: '{{ firewall_comment }}'
+  # Using command module
+  # command: { argv: [ufw, allow, '{{ ansible_ssh_port }}'] }
+
+- name: '{{ title }}: allow HTTP'
+  become: yes
+  ufw:
+    rule: 'allow'
+    port: '{{ 80 | string }}'
+    proto: tcp
+    comment: '{{ firewall_comment }}'
+
+- name: '{{ title }}: allow HTTPS'
+  become: yes
+  ufw:
+    rule: 'allow'
+    port: '{{ 443 | string }}'
+    proto: tcp
+    comment: '{{ firewall_comment }}'
+
+- name: '{{ title }}: deny SSH ipv6'
+  become: yes
+  ufw:
+    rule: 'deny'
+    from_ip: '::/0'
+
+    # ... if a different SSH port is used
+    # port: ???
+    port: '{{ 22 | string }}'
+
+    proto: 'tcp'
+    comment: '{{ firewall_comment }}'
+
+- name: '{{ title }}: enable'
+  become: yes
+  ufw:
+    state: enabled
+  # Using command module
+  # command: { argv: [ufw, --force, enable] }
+
+- name: '{{ title }}: default, deny incoming'
+  become: yes
+  ufw:
+    default: 'deny'
+    direction: 'incoming'
+    comment: '{{ firewall_comment }}'
+  # Using command module
+  # command: { argv: [ufw, default, deny, incoming] }
+
+- name: '{{ title }}: default, allow outgoing'
+  become: yes
+  ufw:
+    default: 'allow'
+    direction: 'outgoing'
+    comment: '{{ firewall_comment }}'
+  # Using command module
+  # command: { argv: [ufw, default, allow, outgoing] }
+
+- name: '{{ title }}: unset facts'
+  set_fact:
+    title:
+    firewall_comment:

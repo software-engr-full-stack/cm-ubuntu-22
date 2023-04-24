@@ -1,0 +1,54 @@
+---
+- name: '{{ title }}, NodeJS: set facts'
+  set_fact:
+    subtitle: '{{ title }}, NodeJS'
+    nodejs_src_basename: 'node-{{ nodejs_version }}-linux-x64.tar.xz'
+    nodejs_archive_file: '/tmp/node-{{ nodejs_version }}-linux-x64.tar.xz'
+    nodejs_extract_dest: '/tmp/node-{{ nodejs_version }}-linux-x64'
+
+- name: '{{ subtitle }}: download archive'
+  get_url:
+    url: 'https://nodejs.org/dist/{{ nodejs_version }}/{{ nodejs_src_basename }}'
+    dest: '{{ nodejs_archive_file }}'
+
+# OK to remove probably because NodeJS modules are installed in app directory.
+- name: '{{ subtitle }}: remove target dir'
+  become: yes
+  ansible.builtin.file:
+    path: '{{ nodejs_target_dir }}'
+    state: absent
+
+- name: '{{ subtitle }}: extract'
+  become: yes
+  ansible.builtin.unarchive:
+    src: '{{ nodejs_archive_file }}'
+    dest: '{{ nodejs_extract_dest | dirname }}'
+    remote_src: yes
+
+- name: '{{ subtitle }}: move'
+  become: yes
+  ansible.builtin.command: /usr/bin/mv '{{ nodejs_extract_dest }}' '{{ nodejs_target_dir }}'
+
+# https://stackoverflow.com/questions/26320901/cannot-install-nodejs-usr-bin-env-node-no-such-file-or-directory
+- name: '{{ subtitle }}: create /usr/bin/node symlink, see doc why'
+  become: yes
+  ansible.builtin.file:
+    src: '{{ nodejs_target_dir }}/bin/node'
+    dest: '/usr/bin/node'
+    state: link
+
+- name: "{{ subtitle }}: change owner of install to '{{ deploy_user }}'"
+  become: yes
+  ansible.builtin.file:
+    path: '{{ nodejs_target_dir }}'
+    state: directory
+    recurse: yes
+    owner: '{{ deploy_user }}'
+    group: '{{ deploy_user }}'
+
+- name: '{{ subtitle }}: unset facts'
+  set_fact:
+    subtitle:
+    nodejs_src_basename:
+    nodejs_archive_file:
+    nodejs_extract_dest:

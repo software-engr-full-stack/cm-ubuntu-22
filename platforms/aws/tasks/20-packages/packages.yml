@@ -1,0 +1,40 @@
+---
+- name: 'Packages: set facts'
+  ansible.builtin.set_fact:
+    title: 'Packages'
+
+- name: '{{ title }}: dist updates and upgrades'
+  become: yes
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: '{{ title }}: install packages'
+  become: yes
+  apt:
+    pkg:
+      - tree
+      - net-tools
+      - make
+
+      # For becoming a non-root user
+      - acl
+
+      # For dev
+      - autoconf
+      - bison
+      - build-essential
+      - libssl-dev
+      - libyaml-dev
+      - libreadline-dev
+      - zlib1g-dev
+      - libncurses-dev
+      - libffi-dev
+      - libgdbm-dev
+      - libdb-dev
+
+    install_recommends: no
+
+- name: '{{ title }}: unset facts'
+  ansible.builtin.set_fact:
+    title:

@@ -1,0 +1,43 @@
+---
+# TODO: check if last back up is unchanged
+- name: 'Backups: set facts'
+  ansible.builtin.set_fact:
+    title: 'Backups'
+    timestamp: "{{ '%Y-%m-%d_%H' | strftime }}"
+    # timestamp: "{{ '%Y-%m-%d_%H-%M-%S' | strftime }}"
+
+- name: '{{ title }}: create dirs'
+  become: yes
+  ansible.builtin.file:
+    path: '/root/backups/{{ item }}'
+    state: directory
+    mode: '0700'
+  loop:
+    - etc
+    - root
+
+- name: '{{ title }}: cp'
+  become: yes
+  ansible.builtin.command:
+    cmd: 'cp -a {{ item.src }} {{ item.dest }}'
+    creates: '{{ item.dest }}'
+  loop:
+    - { src: '/etc/',  dest: '/root/backups/etc/{{ timestamp }}' }
+    - { src: '/root/', dest: '/tmp/root-backup' }
+
+- name: '{{ title }}: mv'
+  become: yes
+  ansible.builtin.command:
+    cmd: 'mv /tmp/root-backup /root/backups/root/{{ timestamp }}'
+    creates: '/root/backups/root/{{ timestamp }}'
+
+- name: '{{ title }}: clean up'
+  become: yes
+  ansible.builtin.file:
+    dest: '/tmp/root-backup'
+    state: absent
+
+- name: '{{ title }}: unset facts'
+  ansible.builtin.set_fact:
+    title:
+    timestamp:

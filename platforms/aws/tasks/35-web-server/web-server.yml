@@ -1,0 +1,17 @@
+---
+- name: 'Web server, Nginx: set facts'
+  set_fact:
+    title: 'Web server, Nginx'
+    html_path: '/var/www/html'
+
+- name: '{{ title }}: install packages'
+  become: yes
+  apt:
+    pkg:
+      - nginx
+    install_recommends: no
+
+- name: '{{ title }}: unset facts'
+  set_fact:
+    title:
+    html_path:

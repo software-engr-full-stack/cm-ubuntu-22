@@ -1,0 +1,23 @@
+---
+- name: 'Programming languages: set facts'
+  set_fact:
+    title: 'Programming languages'
+
+- import_tasks: './go.yml'
+
+- import_tasks: './nodejs.yml'
+
+- import_tasks: './ruby.yml'
+
+- name: '{{ title }}: set path for binaries'
+  become: yes
+  lineinfile:
+    dest:  /etc/profile
+    line: '{{ item }}'
+  loop:
+    - '# ...'
+    - 'export PATH=$PATH:/home/{{ deploy_user }}/go/bin:{{ go_target_dir }}/bin:{{ nodejs_target_dir }}/bin'
+
+- name: '{{ title }}: unset facts'
+  set_fact:
+    title:

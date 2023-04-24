@@ -1,0 +1,45 @@
+---
+- name: '{{ title }}, Go: set facts'
+  set_fact:
+    subtitle: '{{ title }}, Go'
+    go_archive_file: '/tmp/{{ go_src_basename }}'
+
+- name: '{{ subtitle }}: download archive'
+  get_url:
+    url: 'https://go.dev/dl/{{ go_src_basename }}'
+    dest: '{{ go_archive_file }}'
+
+# # TODO: probably not a good idea to remove this because
+# #   we'll be reinstalling Go packages all the time if we do.
+# # Removing go dir is what https://go.dev/doc/install recommends.
+# # Not sure if it's necessary in this context.
+# # This will run the unarchive task again if this dir is deleted.
+# # No removal: 14 seconds
+# # With removal: 16 seconds
+# # Just keep it. 2 sec diff is negligible.
+# - name: '{{ subtitle }}: remove target dir'
+#   become: yes
+#   ansible.builtin.file:
+#     path: '{{ go_target_dir }}'
+#     state: absent
+
+- name: '{{ subtitle }}: extract'
+  become: yes
+  ansible.builtin.unarchive:
+    src: '{{ go_archive_file }}'
+    dest: '{{ go_target_dir | dirname }}'
+    remote_src: yes
+
+- name: "{{ subtitle }}: change owner of install to '{{ deploy_user }}'"
+  become: yes
+  ansible.builtin.file:
+    path: '{{ go_target_dir }}'
+    state: directory
+    recurse: yes
+    owner: '{{ deploy_user }}'
+    group: '{{ deploy_user }}'
+
+- name: '{{ subtitle }}: unset facts'
+  set_fact:
+    subtitle:
+    go_archive_file:

@@ -1,0 +1,56 @@
+---
+- name: '{{ title }}, Ruby: set facts'
+  set_fact:
+    subtitle: '{{ title }}, Ruby'
+    home_dir: '/home/{{ deploy_user }}'         # TODO: use a better way of finding out the home dir
+    rbenv_dir: '/home/{{ deploy_user }}/.rbenv' # TODO: use a better way of finding out the home dir
+
+- name: '{{ subtitle }}: install rbenv'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.git:
+    repo: 'https://github.com/rbenv/rbenv.git'
+    dest: '{{ rbenv_dir }}'
+    clone: yes
+
+- name: '{{ subtitle }}: rbenv setup'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.blockinfile:
+    path: '{{ home_dir }}/.bashrc'
+    insertafter: EOF
+    block: |
+      eval "$(~/.rbenv/bin/rbenv init - bash)"
+
+- name: '{{ subtitle }}: install installer plug-in'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.git:
+    repo: 'https://github.com/rbenv/ruby-build.git'
+    dest: '{{ rbenv_dir }}/plugins/ruby-build'
+    clone: yes
+
+- name: '{{ subtitle }}: install {{ ruby_version }}'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.command:
+    argv:
+      - '{{ rbenv_dir }}/bin/rbenv'
+      - install
+      - '{{ ruby_version }}'
+    creates: '{{ rbenv_dir }}/versions/{{ ruby_version }}/bin/ruby'
+
+- name: '{{ subtitle }}: install set global version'
+  become: yes
+  become_user: '{{ deploy_user }}'
+  ansible.builtin.command:
+    argv:
+      - '{{ rbenv_dir }}/bin/rbenv'
+      - global
+      - '{{ ruby_version }}'
+
+- name: '{{ subtitle }}: unset facts'
+  set_fact:
+    subtitle:
+    home_dir:
+    rbenv_dir:
