@@ -33,6 +33,9 @@
       - libgdbm-dev
       - libdb-dev
 
+      # PostgreSQL client
+      - libpq-dev
+
     install_recommends: no
 
 - name: '{{ title }}: unset facts'
